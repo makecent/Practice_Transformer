@@ -13,11 +13,18 @@ def scaled_dot_product_attention(q, k, v, masked=False):
     return attention.bmm(v)
 
 
-def positional_embedding(seq_len, dim_model):
-    pos = torch.arange(seq_len).reshape(1, -1, 1)
-    dim = torch.arange(dim_model).reshape(1, 1, -1)
-    phase = torch.div(pos, 1e4 ** (2 * dim // dim_model))
-    return torch.where(dim.long() % 2 == 0, torch.sin(phase), torch.cos(phase))
+class PositionalEmbedding(nn.Module):
+    def __init__(self, dim_model, max_len):
+        super(PositionalEmbedding, self).__init__()
+
+        pos = torch.arange(max_len).reshape(1, -1, 1)
+        dim = torch.arange(dim_model).reshape(1, 1, -1)
+        phase = torch.div(pos, 1e4 ** (2 * dim // dim_model))
+        pe = torch.where(dim.long() % 2 == 0, torch.sin(phase), torch.cos(phase))
+        self.register_buffer('pe', pe)
+
+    def forward(self, x):
+        return x + self.pe[:x.size(1)]
 
 
 class AttentionHead(torch.nn.Module):
@@ -27,9 +34,10 @@ class AttentionHead(torch.nn.Module):
         self.linear_q = nn.Linear(dim_model, dim_k)
         self.linear_k = nn.Linear(dim_model, dim_k)
         self.linear_v = nn.Linear(dim_model, dim_v)
+        self.masked = masked
 
     def forward(self, q, k, v):
-        return scaled_dot_product_attention(self.linear_q(q), self.linear_k(k), self.linear_v(v), masked=False)
+        return scaled_dot_product_attention(self.linear_q(q), self.linear_k(k), self.linear_v(v), self.masked)
 
 
 class MultiHeadAttention(torch.nn.Module):
@@ -69,10 +77,10 @@ class PositionWiseFFD(nn.Module):
 
 
 class TransformerEncoderLayer(nn.Module):
-    def __init__(self, num_heads=8, dim_model=512, dim_k=64, dim_ffd=2048):
+    def __init__(self, num_heads=8, dim_model=512, dim_k=64, dim_hid=2048):
         super(TransformerEncoderLayer, self).__init__()
         self.attention = Residual(MultiHeadAttention(num_heads, dim_model, dim_k))
-        self.position_wise_ffd = Residual(PositionWiseFFD(dim_in=dim_model, dim_hidden=dim_ffd, dim_out=dim_model))
+        self.position_wise_ffd = Residual(PositionWiseFFD(dim_in=dim_model, dim_hidden=dim_hid, dim_out=dim_model))
 
     def forward(self, x):
         x = self.attention(x, x, x)
@@ -80,23 +88,23 @@ class TransformerEncoderLayer(nn.Module):
 
 
 class TransformerEncoder(nn.Module):
-    def __init__(self, num_layer=6, num_heads=8, dim_model=512, dim_k=64, dim_ffd=2048):
+    def __init__(self, num_layer=6, num_heads=8, dim_model=512, dim_k=64, dim_hid=2048):
         super(TransformerEncoder, self).__init__()
         self.num_layer = num_layer
         self.encode_layers = nn.Sequential(
-            *[TransformerEncoderLayer(num_heads, dim_model, dim_k, dim_ffd) for _ in range(num_layer)])
+            *[TransformerEncoderLayer(num_heads, dim_model, dim_k, dim_hid) for _ in range(num_layer)])
+        self.positional_embedding = PositionalEmbedding(dim_model=dim_model, max_len=5000)
 
     def forward(self, x):
-        seq_len, dim_model = x.shape[1:3]
-        x += positional_embedding(seq_len, dim_model)
+        x = self.positional_embedding(x)
         return self.encode_layers(x)
 
 
 class TransformerDecoderLayer(nn.Module):
-    def __init__(self, num_heads=8, dim_model=512, dim_k=64, dim_ffd=2048):
+    def __init__(self, num_heads=8, dim_model=512, dim_k=64, dim_hid=2048):
         super(TransformerDecoderLayer, self).__init__()
         self.masked_attention = Residual(MultiHeadAttention(num_heads, dim_model, dim_k, masked=True))
-        self.position_wise_ffd = Residual(PositionWiseFFD(dim_in=dim_model, dim_hidden=dim_ffd, dim_out=dim_model))
+        self.position_wise_ffd = Residual(PositionWiseFFD(dim_in=dim_model, dim_hidden=dim_hid, dim_out=dim_model))
         self.attention = Residual(MultiHeadAttention(num_heads, dim_model, dim_k))
 
     def forward(self, x, encoder_f):
@@ -106,26 +114,26 @@ class TransformerDecoderLayer(nn.Module):
 
 
 class TransformerDecoder(nn.Module):
-    def __init__(self, num_layer=6, num_heads=8, dim_model=512, dim_k=64, dim_ffd=2048):
+    def __init__(self, num_layer=6, num_heads=8, dim_model=512, dim_k=64, dim_hid=2048):
         super(TransformerDecoder, self).__init__()
         self.num_layer = num_layer
         self.decode_layers = nn.ModuleList(
-            [TransformerDecoderLayer(num_heads, dim_model, dim_k, dim_ffd) for _ in range(num_layer)])
+            [TransformerDecoderLayer(num_heads, dim_model, dim_k, dim_hid) for _ in range(num_layer)])
         self.linear = nn.Linear(dim_model, dim_model)
+        self.positional_embedding = PositionalEmbedding(dim_model, max_len=5000)
 
     def forward(self, x, encoder_f):
-        seq_len, dim_model = x.shape[1:3]
-        x += positional_embedding(seq_len, dim_model)
+        x += self.positional_embedding(x)
         for layer in self.decode_layers:
             x = layer(x, encoder_f)
         return self.linear(x)
 
 
 class Transformer(nn.Module):
-    def __init__(self, encoder_layer=6, decoder_layer=6, num_heads=8, dim_model=512, dim_k=64, dim_ffd=2048):
+    def __init__(self, encoder_layer=6, decoder_layer=6, num_heads=8, dim_model=512, dim_k=64, dim_hid=2048):
         super(Transformer, self).__init__()
-        self.encoder = TransformerEncoder(encoder_layer, num_heads, dim_model, dim_k, dim_ffd)
-        self.decoder = TransformerDecoder(decoder_layer, num_heads, dim_model, dim_k, dim_ffd)
+        self.encoder = TransformerEncoder(encoder_layer, num_heads, dim_model, dim_k, dim_hid)
+        self.decoder = TransformerDecoder(decoder_layer, num_heads, dim_model, dim_k, dim_hid)
 
     def forward_train(self, input_embedding, output_embedding):
         encoder_f = self.encoder(input_embedding)
