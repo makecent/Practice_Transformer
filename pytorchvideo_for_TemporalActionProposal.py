@@ -104,6 +104,7 @@ def THUMOS14(
         #     labels[box[0]: box[1]] = 1
         # labels = {"label": torch.from_numpy(labels).float()}
         labeled_video_paths.append((video_ann['frame_dir'], {"label": torch.tensor(video_ann['label'])}))
+        print(len(labeled_video_paths), "\n Here~~~~~~~~~~~~~~~~~~~~~`")
 
     return LabeledVideoDataset2(
         labeled_video_paths=labeled_video_paths,
