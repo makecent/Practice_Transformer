@@ -87,16 +87,13 @@ class LabeledVideoDataset2(LabeledVideoDataset):
                 video_index = next(self._video_sampler_iter)  # return StopIteration when all video used
                 try:
                     video_path, info_dict = self._labeled_videos[video_index]
-                    print("\n Works Here5 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``")
                     video = self.video_path_handler.video_from_path(
                         video_path,
                         decode_audio=self._decode_audio,
                         decoder=self._decoder,
                     )
-                    print("\n Works Here6 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``")
                     self._loaded_video_label = (video, info_dict, video_index)
                 except Exception as e:
-                    print(e)
                     logger.debug(
                         "Failed to load video with error: {}; trial {}".format(
                             e,
@@ -113,7 +110,6 @@ class LabeledVideoDataset2(LabeledVideoDataset):
             ) = self._clip_sampler(
                 self._next_clip_start_time, video.duration, info_dict
             )
-            print("\n Works Here", clip_start, clip_end, video_index)
             if isinstance(clip_start, list):  # multi-clip in each sample
 
                 # Only load the clips once and reuse previously stored clips if there are multiple
@@ -179,7 +175,6 @@ class LabeledVideoDataset2(LabeledVideoDataset):
                 # User can force dataset to continue by returning None in transform.
                 if sample_dict is None:
                     continue
-            print(sample_dict.keys())
             return sample_dict
         # else:
         #     raise RuntimeError(
