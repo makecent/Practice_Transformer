@@ -95,8 +95,7 @@ class LabeledVideoDataset2(LabeledVideoDataset):
                     self._loaded_video_label = (video, info_dict, video_index)
                 except Exception as e:
                     logger.debug(
-                        "Failed to load video {} with error: {}; trial {}".format(
-                            video_path,
+                        "Failed to load video with error: {}; trial {}".format(
                             e,
                             i_try,
                         )
@@ -179,10 +178,10 @@ class LabeledVideoDataset2(LabeledVideoDataset):
                     continue
 
             return sample_dict
-        else:
-            raise RuntimeError(
-                f"Failed to load video after {self._MAX_CONSECUTIVE_FAILURES} retries."
-            )
+        # else:
+        #     raise RuntimeError(
+        #         f"Failed to load video after {self._MAX_CONSECUTIVE_FAILURES} retries."
+        #     )
 
 
 def labeled_video_dataset(
