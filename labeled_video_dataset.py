@@ -74,6 +74,7 @@ class LabeledVideoDataset2(LabeledVideoDataset):
         self.video_path_handler = VideoPathHandler2()
 
     def __next__(self) -> dict:
+        print(len(self._video_sampler), "\n video_sampler Here~~~~~~~~~~~~~~~~~~")
         if not self._video_sampler_iter:
             # Setup MultiProcessSampler here - after PyTorch DataLoader workers are spawned.
             self._video_sampler_iter = iter(MultiProcessSampler(self._video_sampler))

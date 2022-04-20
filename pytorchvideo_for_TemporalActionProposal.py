@@ -104,7 +104,7 @@ def THUMOS14(
         #     labels[box[0]: box[1]] = 1
         # labels = {"label": torch.from_numpy(labels).float()}
         labeled_video_paths.append((video_ann['frame_dir'], {"label": torch.tensor(video_ann['label'])}))
-        print(len(labeled_video_paths), "\n Here~~~~~~~~~~~~~~~~~~~~~`")
+    print(len(labeled_video_paths), "\n Here~~~~~~~~~~~~~~~~~~~~~`")
 
     return LabeledVideoDataset2(
         labeled_video_paths=labeled_video_paths,
@@ -290,8 +290,8 @@ class VideoClassificationLightningModule(pytorch_lightning.LightningModule):
 def train():
     classification_module = VideoClassificationLightningModule()
     data_module = THUMOS14DataModule()
-    train, val = data_module.train_dataloader().dataset, data_module.val_dataloader().dataset
-    t = next(val)
+    # train, val = data_module.train_dataloader().dataset, data_module.val_dataloader().dataset
+    # t = next(val)
     trainer = pytorch_lightning.Trainer(accelerator="gpu", devices=1, check_val_every_n_epoch=1, max_epochs=1000)
     trainer.fit(classification_module, data_module.train_dataloader(), data_module.val_dataloader())
 
