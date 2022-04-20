@@ -37,7 +37,8 @@ warnings.filterwarnings(
 
 def parse_args():
     parser = argparse.ArgumentParser(description='nothing here')
-    parser.add_argument("--clip_len", type=int, help="clip duration in seconds", default=2)
+    parser.add_argument("--clip_len", type=int, help="clip duration in seconds", default=4)
+    parser.add_argument("--frames_per_clip", type=int, help="clip duration in seconds", default=32)
     return parser.parse_args()
 
 
@@ -161,7 +162,7 @@ class THUMOS14DataModule(pytorch_lightning.LightningDataModule):
     _ANN_FILE_VAL = 'annotations/apn/apn_test_demo.csv'
     _FPS = 30
     _CLIP_DURATION = args.clip_len  # Duration of sampled clip for each video
-    _FRAMES_PER_CLIP = 16
+    _FRAMES_PER_CLIP = args.frames_per_clip
     _BATCH_SIZE = 4
     _NUM_WORKERS = 8  # Number of parallel processes fetching data
 
@@ -238,14 +239,6 @@ class THUMOS14DataModule(pytorch_lightning.LightningDataModule):
 
 
 def make_kinetics_mvit():
-    # pytorchvideo.models.vision_transformers.create_multiscale_vision_transformers()
-    # return pytorchvideo.models.resnet.create_resnet(
-    #     input_channel=3,  # RGB input from Kinetics
-    #     model_depth=50,  # For the tutorial let's just use a 50 layer network
-    #     model_num_class=400,  # Kinetics has 400 classes so we need out final head to align
-    #     norm=nn.BatchNorm3d,
-    #     activation=nn.ReLU,
-    # )
     model = torch.hub.load("facebookresearch/pytorchvideo", model="mvit_base_16x4", pretrained=True)
     # for m in model.modules():
     #     if hasattr(m, 'cls_embed_on'):
@@ -253,7 +246,14 @@ def make_kinetics_mvit():
     #     if hasattr(m, 'has_cls_embed'):
     #         m.has_cls_embed = False
     # model.head = nn.Sequential(SpatialPool(thw=[8, 7, 7]), nn.Linear(768, 2), nn.Flatten(start_dim=1))
-    model.head.proj = nn.Linear(768, 16)
+    model.head.proj = nn.Linear(768, args.frames_per_clip)
+    if args.frames_per_clip != 16:
+        from pytorchvideo.layers.positional_encoding import SpatioTemporalClsPositionalEncoding
+        model.cls_positional_encoding = SpatioTemporalClsPositionalEncoding(
+            embed_dim=96,
+            patch_embed_shape=(args.frames_per_clip//2, 56, 56),
+            sep_pos_embed=True,
+            has_cls=True)
     return model
 
 
