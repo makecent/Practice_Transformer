@@ -81,11 +81,15 @@ class LabeledVideoDataset2(LabeledVideoDataset):
         for i_try in range(self._MAX_CONSECUTIVE_FAILURES):
             # Reuse previously stored video if there are still clips to be sampled from
             # the last loaded video.
+            print("\n Works Here1 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``")
             if self._loaded_video_label:
                 video, info_dict, video_index = self._loaded_video_label
+                print("\n Works Here2 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``")
             else:
+                print("\n Works Here3 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``")
                 video_index = next(self._video_sampler_iter)  # return StopIteration when all video used
                 try:
+                    print("\n Works Here4 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``")
                     video_path, info_dict = self._labeled_videos[video_index]
                     video = self.video_path_handler.video_from_path(
                         video_path,
@@ -93,6 +97,7 @@ class LabeledVideoDataset2(LabeledVideoDataset):
                         decoder=self._decoder,
                     )
                     self._loaded_video_label = (video, info_dict, video_index)
+                    print("\n Works Here5 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``")
                 except Exception as e:
                     logger.debug(
                         "Failed to load video with error: {}; trial {}".format(
@@ -101,6 +106,7 @@ class LabeledVideoDataset2(LabeledVideoDataset):
                         )
                     )
                     continue
+            print("\n Works Here6 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``")
             (
                 clip_start,
                 clip_end,
