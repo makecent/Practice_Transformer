@@ -91,13 +91,15 @@ class LabeledVideoDataset2(LabeledVideoDataset):
                 try:
                     print("\n Works Here4 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``")
                     video_path, info_dict = self._labeled_videos[video_index]
+                    print("\n Works Here5 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``")
                     video = self.video_path_handler.video_from_path(
                         video_path,
                         decode_audio=self._decode_audio,
                         decoder=self._decoder,
                     )
+                    print("\n Works Here6 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``")
                     self._loaded_video_label = (video, info_dict, video_index)
-                    print("\n Works Here5 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``")
+                    print("\n Works Here7 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``")
                 except Exception as e:
                     logger.debug(
                         "Failed to load video with error: {}; trial {}".format(
@@ -106,7 +108,6 @@ class LabeledVideoDataset2(LabeledVideoDataset):
                         )
                     )
                     continue
-            print("\n Works Here6 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~``")
             (
                 clip_start,
                 clip_end,
