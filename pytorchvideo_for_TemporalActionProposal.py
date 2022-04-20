@@ -160,7 +160,7 @@ class THUMOS14DataModule(pytorch_lightning.LightningDataModule):
     _ANN_FILE_TRAIN = 'annotations/apn/apn_val.csv'
     _ANN_FILE_VAL = 'annotations/apn/apn_test_demo.csv'
     _FPS = 30
-    _CLIP_DURATION = args.clie_len  # Duration of sampled clip for each video
+    _CLIP_DURATION = args.clip_len  # Duration of sampled clip for each video
     _FRAMES_PER_CLIP = 16
     _BATCH_SIZE = 4
     _NUM_WORKERS = 8  # Number of parallel processes fetching data
