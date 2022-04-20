@@ -176,7 +176,7 @@ class LabeledVideoDataset2(LabeledVideoDataset):
                 # User can force dataset to continue by returning None in transform.
                 if sample_dict is None:
                     continue
-
+            print(sample_dict.keys())
             return sample_dict
         # else:
         #     raise RuntimeError(
