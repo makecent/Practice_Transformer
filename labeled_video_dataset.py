@@ -110,7 +110,7 @@ class LabeledVideoDataset2(LabeledVideoDataset):
             ) = self._clip_sampler(
                 self._next_clip_start_time, video.duration, info_dict
             )
-
+            print("\n Works Here", clip_start, clip_end, video_index)
             if isinstance(clip_start, list):  # multi-clip in each sample
 
                 # Only load the clips once and reuse previously stored clips if there are multiple
