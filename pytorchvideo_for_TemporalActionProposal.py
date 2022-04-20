@@ -1,3 +1,4 @@
+import argparse
 import os
 import random
 import warnings
@@ -32,6 +33,15 @@ from labeled_video_dataset import LabeledVideoDataset2
 warnings.filterwarnings(
     "ignore", ".*Trying to infer the `batch_size` from an ambiguous collection.*"
 )
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='nothing here')
+    parser.add_argument("--clip_len", type=int, help="clip duration in seconds", default=2)
+    return parser.parse_args()
+
+
+args = parse_args()
 
 
 class BBoxesClipSampler(ClipSampler):
@@ -138,7 +148,8 @@ class ClipLabels(torch.nn.Module):
         # self.subsample_indices = torch.clamp(indices, 0, clip_len - 1).long()
         # frame_indices_subsampled = torch.index_select(sample_dict["frame_indices"], dim=-1,
         #                                               index=self.subsample_indices)
-        frame_indices_subsampled = uniform_temporal_subsample(sample_dict["frame_indices"], self.frames_per_clip, temporal_dim=0)
+        frame_indices_subsampled = uniform_temporal_subsample(sample_dict["frame_indices"], self.frames_per_clip,
+                                                              temporal_dim=0)
         sample_dict['label'] = self.get_binary_label(frame_indices_subsampled, sample_dict["label"])
         return sample_dict
 
@@ -149,7 +160,7 @@ class THUMOS14DataModule(pytorch_lightning.LightningDataModule):
     _ANN_FILE_TRAIN = 'annotations/apn/apn_val.csv'
     _ANN_FILE_VAL = 'annotations/apn/apn_test_demo.csv'
     _FPS = 30
-    _CLIP_DURATION = 3  # Duration of sampled clip for each video
+    _CLIP_DURATION = args.clie_len  # Duration of sampled clip for each video
     _FRAMES_PER_CLIP = 16
     _BATCH_SIZE = 4
     _NUM_WORKERS = 8  # Number of parallel processes fetching data
