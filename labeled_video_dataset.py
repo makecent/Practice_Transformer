@@ -74,7 +74,6 @@ class LabeledVideoDataset2(LabeledVideoDataset):
         self.video_path_handler = VideoPathHandler2()
 
     def __next__(self) -> dict:
-        print(len(self._video_sampler), "\n video_sampler Here~~~~~~~~~~~~~~~~~~")
         if not self._video_sampler_iter:
             # Setup MultiProcessSampler here - after PyTorch DataLoader workers are spawned.
             self._video_sampler_iter = iter(MultiProcessSampler(self._video_sampler))
@@ -96,7 +95,8 @@ class LabeledVideoDataset2(LabeledVideoDataset):
                     self._loaded_video_label = (video, info_dict, video_index)
                 except Exception as e:
                     logger.debug(
-                        "Failed to load video with error: {}; trial {}".format(
+                        "Failed to load video {} with error: {}; trial {}".format(
+                            video_path,
                             e,
                             i_try,
                         )
