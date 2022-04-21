@@ -239,7 +239,7 @@ class THUMOS14DataModule(pytorch_lightning.LightningDataModule):
 
 
 def make_kinetics_mvit():
-    model = torch.hub.load("facebookresearch/pytorchvideo", model="mvit_base_16x4", pretrained=True)
+    model = torch.hub.load("facebookresearch/pytorchvideo", model="mvit_base_16x4", pretrained=False)
     # for m in model.modules():
     #     if hasattr(m, 'cls_embed_on'):
     #         m.cls_embed_on = False
